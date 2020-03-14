@@ -1,0 +1,40 @@
+from django.db.models import Count
+from django.shortcuts import render, redirect
+
+# Create your views here.
+from admins.models import ComparisonModel
+from user.models import RegisterModel, Malware_Recogition_Model, FeedbackModel
+
+
+def admin_login(request):
+    if request.method == "POST":
+        if request.method == "POST":
+            usid = request.POST.get('username')
+            pswd = request.POST.get('password')
+            if usid == 'admin' and pswd == 'admin':
+                return redirect('admin_page')
+    return render(request,'admins/admin_login.html')
+
+def admin_page(request):
+    obj = RegisterModel.objects.all()
+    return render(request,'admins/admin_page.html',{'obje':obj})
+
+def admin_networkdata(request):
+    obj = Malware_Recogition_Model.objects.all()
+    return render(request,'admins/admin_networkdata.html',{'object':obj})
+
+def admin_nlpanalysis(request):
+    chart = Malware_Recogition_Model.objects.values('result').annotate(dcount=Count('result'))
+    return render(request,'admins/admin_nlpanalysis.html',{'objects':chart})
+
+def admin_graphicalanalysis(request):
+    chart = Malware_Recogition_Model.objects.values('result').annotate(dcount=Count('result'))
+    return render(request,'admins/admin_graphicalanalysis.html',{'objects':chart})
+
+def admin_algorithms(request):
+    chart = ComparisonModel.objects.all()
+    return render(request,'admins/admin_algorithms.html',{'objects': chart})
+
+def view_feedback(request):
+    obj = FeedbackModel.objects.all()
+    return render(request,'admins/view_feedback.html',{'object':obj})

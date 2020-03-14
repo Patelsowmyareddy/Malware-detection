@@ -1,0 +1,113 @@
+import re
+
+from django.db.models import Count
+from django.shortcuts import render, redirect, get_object_or_404
+
+# Create your views here.
+from admins.models import ComparisonModel
+from user.forms import RegisterForms
+from user.models import RegisterModel, Malware_Recogition_Model, FeedbackModel
+
+
+def index(request):
+    if request.method=="POST":
+        usid=request.POST.get('user')
+        pswd = request.POST.get('password')
+        try:
+            check = RegisterModel.objects.get(userid=usid,password=pswd)
+            request.session['userid']=check.id
+            return redirect('userpage')
+        except:
+            pass
+    return render(request,'user/index.html')
+
+def register(request):
+    if request.method=="POST":
+        forms=RegisterForms(request.POST)
+        if forms.is_valid():
+            forms.save()
+            return redirect('index')
+    else:
+        forms=RegisterForms()
+    return render(request,'user/register.html',{'form':forms})
+
+def userpage(request):
+    userid = request.session['userid']
+    objec = RegisterModel.objects.get(id=userid)
+    cate1 = []
+    cate2, cate3, cate4, cate5, cate6, cate7, cate8, cate9, cate10, cate11, cate12, cate13, cate14, cate15, cate16, cate17, = [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
+    s = ''
+    txt = ''
+    c = ''
+    malware = ''
+    nu = ''
+    ans = ''
+
+    if request.method == "POST":
+        txt = request.POST.get("name")
+
+        c = (re.findall(r"[\w']+", str(txt)))
+        malware = (
+        'Etag,ECSID,phonemodel,nginx,2F4,keyid,apikey,iosid,networkoperator,NLOM,2C,3A,NID,ashx,vvid,privateid,decid')
+        s = malware.split(',')
+        for attack in s:
+            for url in c:
+                if url == attack:
+                    nu = nu + url
+        if len(nu) > 0:
+            ans = nu
+        else:
+            ans = 'not malware affected'
+        Malware_Recogition_Model.objects.create(usid=objec, links=txt, result=ans)
+    return render(request,'user/userpage.html',{'form':c,'fg':txt})
+
+def mydetails(request):
+    userid = request.session['userid']
+    ted = RegisterModel.objects.get(id=userid)
+    return render(request,'user/mydetails.html', {'object': ted})
+
+def update_page(request):
+    userid = request.session['userid']
+    objec = RegisterModel.objects.get(id=userid)
+    if request.method == "POST":
+        FirstName = request.POST.get('FirstName', '')
+        LastName = request.POST.get('LastName', '')
+        UserId = request.POST.get('UserId', '')
+        Password = request.POST.get('Password', '')
+        MobileNumber = request.POST.get('MobileNumber', '')
+        EmailId = request.POST.get('EmailId', '')
+        Gender = request.POST.get('Gender', '')
+
+        obj = get_object_or_404(RegisterModel, id=userid)
+        obj.firstname = FirstName
+        obj.lastname = LastName
+        obj.userid = UserId
+        obj.password = Password
+        obj.mblenum = MobileNumber
+        obj.email = EmailId
+        obj.gender = Gender
+
+        obj.save(update_fields=["firstname", "lastname", "userid", "password", "mblenum", "email",
+                                "gender", ])
+        return redirect('mydetails')
+    return render(request,'user/update_page.html',{'obj': objec})
+
+def user_nlp_analysis(request):
+    charts = ComparisonModel.objects.all()
+    chart = Malware_Recogition_Model.objects.values('result').annotate(dcount=Count('result'))
+    return render(request,'user/user_nlp_analysis.html',{'objects':chart,'ty':charts})
+
+def user_graphical_analysis(request):
+    chart = Malware_Recogition_Model.objects.values('result').annotate(dcount=Count('result'))
+    return render(request,'user/user_graphical_analysis.html',{'objects':chart})
+
+def user_feedback(request):
+    userid = request.session['userid']
+    object = RegisterModel.objects.get(id=userid)
+    if request.method == "POST":
+        feed = request.POST.get('feedback')
+        FeedbackModel.objects.create(uid=object, feedback=feed)
+    return render(request,'user/user_feedback.html')
+
+def user_details(request):
+    return render(request,'user/user_details.html')

@@ -1,0 +1,9 @@
+from django.db import models
+
+# Create your models here.
+class ComparisonModel(models.Model):
+    Model =models.CharField(max_length=300)
+    Precisions =models.CharField(max_length=300)
+    Accuracy_value =models.CharField(max_length=300)
+    Recall_value=models.CharField(max_length=300)
+    True_Negative_Rate=models.CharField(max_length=300)
